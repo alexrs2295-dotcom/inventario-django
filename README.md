@@ -4,7 +4,7 @@ Aplicación web en Django (5.2, SQLite) para controlar el stock de productos y s
 
 ## Acceso a la demo
 
-Servicio desplegado en Render: `https://inventario-django.onrender.com` (sustituir por la URL pública real).
+**URL de la demo: [https://inventario-django-lq9u.onrender.com](https://inventario-django-lq9u.onrender.com)**
 
 - Usuario: `admin`
 - Contraseña: `demo-inventario-django`
@@ -47,7 +47,7 @@ Después carga datos de ejemplo (idempotente; `--reset` borra antes el inventari
 | `DJANGO_DEBUG` | `1` | `0` en producción. |
 | `DJANGO_SECRET_KEY` | clave de desarrollo | Obligatoria si `DJANGO_DEBUG=0`. |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` (solo en debug) | Hosts separados por comas (en Render: `.onrender.com`). |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | vacío | Orígenes separados por comas, p. ej. `https://inventario-django.onrender.com`. |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | vacío | Orígenes separados por comas, p. ej. `https://inventario-django-lq9u.onrender.com`. |
 | `DJANGO_HTTPS` | `0` | Con `DJANGO_DEBUG=0`, `1` marca las cookies de sesión/CSRF como Secure. Ponlo a `1` solo si se sirve por HTTPS (también activa `SECURE_PROXY_SSL_HEADER` para proxys como el de Render); con HTTP el login no funcionaría. |
 | `DEMO_PASSWORD` | sin definir | Contraseña del usuario `admin` en Render (la usa `crear_admin_demo`). |
 
@@ -67,7 +67,7 @@ Todos los campos son obligatorios; `precio` ≥ 0 con decimales, `stock` y `stoc
 1. Crea una cuenta en [render.com](https://render.com) y conecta tu cuenta de GitHub.
 2. **New → Blueprint**, elige este repositorio (lee `render.yaml`).
 3. Escribe el valor de `DEMO_PASSWORD` (la contraseña que tendrá el usuario `admin`) y pulsa **Apply**.
-4. Al terminar el build, la app queda en una URL tipo `https://inventario-django.onrender.com`. Entra con el usuario `admin` y la contraseña que pusiste en `DEMO_PASSWORD`.
+4. Al terminar el build, la app queda en la URL `https://inventario-django-lq9u.onrender.com`. Entra con el usuario `admin` y la contraseña que pusiste en `DEMO_PASSWORD`.
 
 `render.yaml` ya define el resto de variables (`DJANGO_DEBUG=0`, `DJANGO_SECRET_KEY` generada, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, `DJANGO_HTTPS=1`). Para actualizar basta con hacer `git push` a `main` (Render redespliega solo).
 
