@@ -37,9 +37,10 @@ Después carga datos de ejemplo (idempotente; `--reset` borra antes el inventari
 |---|---|---|
 | `DJANGO_DEBUG` | `1` | `0` en producción. |
 | `DJANGO_SECRET_KEY` | clave de desarrollo | Obligatoria si `DJANGO_DEBUG=0`. |
-| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` (solo en debug) | Hosts/IP separados por comas. |
-| `DJANGO_CSRF_TRUSTED_ORIGINS` | vacío | Orígenes separados por comas, p. ej. `http://1.2.3.4:8080`. |
+| `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` (solo en debug) | Hosts separados por comas (en Render: `.onrender.com`). |
+| `DJANGO_CSRF_TRUSTED_ORIGINS` | vacío | Orígenes separados por comas, p. ej. `https://inventario-django.onrender.com`. |
 | `DJANGO_HTTPS` | `0` | Con `DJANGO_DEBUG=0`, `1` marca las cookies de sesión/CSRF como Secure. Ponlo a `1` solo si se sirve por HTTPS (también activa `SECURE_PROXY_SSL_HEADER` para proxys como el de Render); con HTTP el login no funcionaría. |
+| `DEMO_PASSWORD` | sin definir | Contraseña del usuario `admin` en Render (la usa `crear_admin_demo`). |
 
 ## Formato del CSV de importación
 
@@ -59,32 +60,6 @@ Todos los campos son obligatorios; `precio` ≥ 0 con decimales, `stock` y `stoc
 3. Escribe el valor de `DEMO_PASSWORD` (la contraseña que tendrá el usuario `admin`) y pulsa **Apply**.
 4. Al terminar el build, la app queda en una URL tipo `https://inventario-django.onrender.com`. Entra con el usuario `admin` y la contraseña que pusiste en `DEMO_PASSWORD`.
 
+`render.yaml` ya define el resto de variables (`DJANGO_DEBUG=0`, `DJANGO_SECRET_KEY` generada, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, `DJANGO_HTTPS=1`). Para actualizar basta con hacer `git push` a `main` (Render redespliega solo).
+
 Avisos del plan gratuito: el servicio se duerme tras 15 min sin tráfico y tarda ~1 min en despertar; el disco es efímero, así que la base SQLite se recrea en cada arranque (migraciones, usuario `admin` vía `crear_admin_demo` y datos demo con `seed_demo`) y **los datos se reinician** cada vez. La contraseña nunca se guarda en el repositorio.
-
-## Alternativa: despliegue en un droplet Ubuntu (nginx + gunicorn, sin dominio ni HTTPS)
-
-Acceso por `http://IP:8080` (el puerto 80 queda libre para otra aplicación).
-
-```
-apt update && apt install -y python3-venv nginx git
-git clone <URL-del-repositorio> /srv/inventario-django
-cd /srv/inventario-django
-cp deploy/.env.example .env      # editar: SECRET_KEY, IP en ALLOWED_HOSTS y CSRF_TRUSTED_ORIGINS
-cp deploy/inventario.service /etc/systemd/system/
-ln -sf /srv/inventario-django/deploy/inventario.nginx /etc/nginx/sites-enabled/inventario
-systemctl daemon-reload && systemctl enable inventario
-bash deploy/deploy.sh            # venv, dependencias, migrate, collectstatic, permisos, arranca el servicio
-nginx -t && systemctl reload nginx
-ufw allow 8080
-```
-
-Crear el primer usuario (como root, con el entorno cargado):
-
-```
-cd /srv/inventario-django && set -a && . ./.env && set +a
-venv/bin/python manage.py createsuperuser
-chown www-data:www-data db.sqlite3
-bash deploy/deploy.sh            # ahora sí carga los datos demo (solo si no hay productos)
-```
-
-Para actualizar: `git pull && bash deploy/deploy.sh`. `deploy.sh` es idempotente (venv, dependencias, migraciones, collectstatic, permisos de SQLite y reinicio del servicio); carga los datos demo solo si no hay productos y existe el usuario `admin`.
