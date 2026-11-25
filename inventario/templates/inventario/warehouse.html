@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% load static inventario_ui %}
+{% block title %}Almacén · Sistema de Inventario{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>Almacén</h1>
+  <div class="acciones">
+    <a class="btn btn-outline-secondary" data-modal href="{% url 'shelf_create' %}">Nueva estantería</a>
+    <a class="btn btn-primary" data-modal href="{% url 'zone_create' %}">Nueva zona</a>
+  </div>
+</div>
+
+<div class="card mb-3"><dl class="resumen alm-resumen">
+  <div><dt>Zonas</dt><dd data-contador="zonas">{{ zonas|length }}</dd></div>
+  <div><dt>Estanterías</dt><dd data-contador="estanterias">{{ n_estanterias }}</dd></div>
+  <div><dt>Ubicados</dt><dd data-contador="ubicados">{{ n_ubicados }}</dd></div>
+  <div><dt>Sin ubicar</dt><dd data-contador="sin_ubicar">{{ sin_ubicar|length }}</dd></div>
+</dl></div>
+
+<div class="alm-barra">
+  <label class="visually-hidden" for="alm-buscar">Buscar producto en el almacén</label>
+  <input class="form-control" id="alm-buscar" type="search" placeholder="Buscar producto por nombre o SKU" autocomplete="off">
+  <p class="alm-ayuda mb-0">Arrastra una ficha desde el asa a otra estantería, o usa el botón Mover.</p>
+</div>
+
+<div class="alm-layout">
+  <section class="bandeja dropzone" data-est="" aria-labelledby="bandeja-t">
+    <header class="bandeja-cab">
+      <h2 id="bandeja-t">Sin ubicar</h2>
+      <span class="alm-n" data-n-bandeja>{{ sin_ubicar|length }} producto{{ sin_ubicar|length|pluralize }}</span>
+    </header>
+    <div class="items">{% for p in sin_ubicar %}{% include 'inventario/_ficha.html' with p=p %}{% endfor %}</div>
+  </section>
+
+  <div class="alm-zonas">
+  {% for z in zonas %}
+    <section class="zona" data-zona="{{ z.pk }}" aria-labelledby="zona-{{ z.pk }}">
+      <header class="zona-cab">
+        <div class="zona-titulo">
+          <h2 id="zona-{{ z.pk }}">{{ z.nombre }}</h2>
+          <span class="alm-n"><span data-n-zona-est>{{ z.estanterias.all|length }}</span> estantería{{ z.estanterias.all|length|pluralize }} · <span data-n-zona>{{ z.n_productos }}</span> producto{{ z.n_productos|pluralize }}</span>
+        </div>
+        <div class="zona-acciones">
+          <a class="btn btn-sm btn-outline-primary" data-modal href="{% url 'shelf_create' %}?zona={{ z.pk }}">Añadir estantería</a>
+          <a class="btn btn-sm btn-outline-secondary" data-modal href="{% url 'zone_update' z.pk %}">Renombrar</a>
+          <a class="btn btn-sm btn-outline-danger" data-modal href="{% url 'zone_delete' z.pk %}">Eliminar</a>
+        </div>
+      </header>
+      <div class="estanterias">
+      {% for e in z.estanterias.all %}
+        <article class="estanteria dropzone" id="est-{{ e.pk }}" data-est="{{ e.pk }}" aria-labelledby="est-t-{{ e.pk }}">
+          <header class="est-cab">
+            <h3 id="est-t-{{ e.pk }}">{{ e.nombre }}</h3>
+            <span class="alm-n" data-n-est>{{ e.productos.all|length }} producto{{ e.productos.all|length|pluralize }}</span>
+            <span class="huecos" aria-hidden="true" data-n="{{ e.productos.all|length }}"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+          </header>
+          <div class="items">{% for p in e.productos.all %}{% include 'inventario/_ficha.html' with p=p %}{% endfor %}</div>
+          <footer class="est-pie">
+            <a class="btn btn-sm btn-outline-primary" data-modal href="{% url 'shelf_add_product' e.pk %}">Añadir producto</a>
+            <a class="btn btn-sm btn-outline-secondary" data-modal href="{% url 'shelf_update' e.pk %}">Renombrar</a>
+            <a class="btn btn-sm btn-outline-danger" data-modal href="{% url 'shelf_delete' e.pk %}">Eliminar</a>
+          </footer>
+        </article>
+      {% empty %}
+        <p class="zona-vacia">Esta zona aún no tiene estanterías.</p>
+      {% endfor %}
+      </div>
+    </section>
+  {% empty %}
+    <div class="card alm-vacio"><div class="card-body">
+      <h2>Aún no hay zonas</h2>
+      <p>Crea una zona (por ejemplo «Pasillo A»), añade estanterías y coloca tus productos arrastrándolos.</p>
+      <a class="btn btn-primary" data-modal href="{% url 'zone_create' %}">Crear la primera zona</a>
+    </div></div>
+  {% endfor %}
+  </div>
+</div>
+
+<div class="alm-toasts" id="alm-toasts" aria-live="polite"></div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'inventario/almacen.js' %}"></script>{% endblock %}

@@ -1,0 +1,10 @@
+{# Medidor semicircular de stock. Uso: {% include 'inventario/_gauge.html' with p=producto size='sm' %} (size: sm | lg) #}
+{% load inventario_ui %}
+<svg class="gauge gauge-{{ size|default:'sm' }} gauge-{{ p.estado_stock }}" viewBox="0 0 120 68" role="img" aria-label="Stock: {{ p.stock }} de mínimo {{ p.stock_minimo }}" style="--pct: {{ p.stock_pct|stringformat:'.1f' }}">
+  <path class="gauge-ol" d="M12 60A48 48 0 0 1 108 60"/>
+  <path class="gauge-track" d="M12 60A48 48 0 0 1 108 60" pathLength="100"/>
+  {% if p.stock %}<path class="gauge-fill" d="M12 60A48 48 0 0 1 108 60" pathLength="100"/>{% endif %}
+  {% if p.stock_minimo %}<line class="gauge-mark" x1="4" y1="60" x2="21" y2="60" transform="rotate(60 60 60)"/>{# el mínimo cae siempre en 1/3 del arco #}{% endif %}
+  <text class="gauge-num{% if p.stock > 999 %} gauge-num-xs{% endif %}" x="60" y="50">{{ p.stock }}</text>
+  <text class="gauge-uds" x="60" y="64">uds</text>
+</svg>

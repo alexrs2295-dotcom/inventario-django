@@ -1,0 +1,35 @@
+from django.urls import path
+
+from . import views as v
+
+urlpatterns = [
+    path('', v.HomeView.as_view(), name='home'),
+    path('productos/', v.ProductList.as_view(), name='product_list'),
+    path('productos/importar/', v.ProductImport.as_view(), name='product_import'),
+    path('productos/importar/plantilla/', v.ProductImportTemplate.as_view(), name='product_import_template'),
+    path('productos/nuevo/', v.ProductCreate.as_view(), name='product_create'),
+    path('productos/<int:pk>/', v.ProductDetail.as_view(), name='product_detail'),
+    path('productos/<int:pk>/editar/', v.ProductUpdate.as_view(), name='product_update'),
+    path('productos/<int:pk>/eliminar/', v.ProductDelete.as_view(), name='product_delete'),
+    path('movimientos/', v.MovementList.as_view(), name='movement_list'),
+    path('movimientos/graficos/', v.MovementCharts.as_view(), name='movement_charts'),
+    path('movimientos/nuevo/', v.MovementCreate.as_view(), name='movement_create'),
+    path('almacen/', v.Warehouse.as_view(), name='warehouse'),
+    path('almacen/mover/', v.WarehouseMove.as_view(), name='warehouse_move'),
+    path('almacen/productos/<int:producto>/mover/', v.Mover.as_view(), name='product_move'),
+    path('almacen/zonas/nueva/', v.ZoneCreate.as_view(), name='zone_create'),
+    path('almacen/zonas/<int:pk>/editar/', v.ZoneUpdate.as_view(), name='zone_update'),
+    path('almacen/zonas/<int:pk>/eliminar/', v.ZoneDelete.as_view(), name='zone_delete'),
+    path('almacen/estanterias/nueva/', v.ShelfCreate.as_view(), name='shelf_create'),
+    path('almacen/estanterias/<int:pk>/editar/', v.ShelfUpdate.as_view(), name='shelf_update'),
+    path('almacen/estanterias/<int:pk>/eliminar/', v.ShelfDelete.as_view(), name='shelf_delete'),
+    path('almacen/estanterias/<int:estanteria>/anadir/', v.Mover.as_view(), name='shelf_add_product'),
+    path('categorias/', v.CategoryList.as_view(), name='category_list'),
+    path('categorias/nueva/', v.CategoryCreate.as_view(), name='category_create'),
+    path('categorias/<int:pk>/editar/', v.CategoryUpdate.as_view(), name='category_update'),
+    path('categorias/<int:pk>/eliminar/', v.CategoryDelete.as_view(), name='category_delete'),
+    path('proveedores/', v.SupplierList.as_view(), name='supplier_list'),
+    path('proveedores/nuevo/', v.SupplierCreate.as_view(), name='supplier_create'),
+    path('proveedores/<int:pk>/editar/', v.SupplierUpdate.as_view(), name='supplier_update'),
+    path('proveedores/<int:pk>/eliminar/', v.SupplierDelete.as_view(), name='supplier_delete'),
+]

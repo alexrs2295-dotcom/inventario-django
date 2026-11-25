@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="page-head">
+  <h1>Gráficos de movimientos</h1>
+  <div class="acciones">
+    {% for d in periodos %}<a class="btn {% if d == dias %}btn-primary{% else %}btn-outline-secondary{% endif %}" href="?dias={{ d }}" {% if d == dias %}aria-current="true"{% endif %}>{{ d }} días</a>{% endfor %}
+    <a class="btn btn-outline-secondary" href="{% url 'movement_list' %}">Ver listado</a>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-12 col-lg-6"><div class="card"><div class="card-body">
+    <h2 class="h6">Entradas y salidas {% if datos.semanal %}por semana{% else %}por día{% endif %} (últimos {{ dias }} días)</h2>
+    <div id="g-serie" class="grafico" role="img" aria-label="Entradas y salidas por periodo"></div>
+  </div></div></div>
+  <div class="col-12 col-lg-6"><div class="card"><div class="card-body">
+    <h2 class="h6">Unidades movidas por categoría</h2>
+    <div id="g-cat" class="grafico" role="img" aria-label="Unidades movidas por categoría"></div>
+  </div></div></div>
+  <div class="col-12 col-lg-6"><div class="card"><div class="card-body">
+    <h2 class="h6">Top 10 productos con más salidas</h2>
+    <div id="g-top" class="grafico" role="img" aria-label="Top 10 productos con más salidas"></div>
+  </div></div></div>
+  <div class="col-12 col-lg-6"><div class="card"><div class="card-body">
+    <h2 class="h6">Productos bajo mínimo</h2>
+    <div id="g-estado" class="grafico" role="img" aria-label="Productos bajo mínimo frente a correctos"></div>
+  </div></div></div>
+</div>
+{{ datos|json_script:"datos-graficos" }}
+<script src="{% static 'inventario/vendor/echarts.min.js' %}"></script>
+<script src="{% static 'inventario/charts.js' %}"></script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById('datos-graficos').textContent);
+  const G = InvCharts, C = G.C, vacio = 'Sin datos en este periodo';
+
+  G.pintar('g-serie', G.suma(D.serie.entradas) + G.suma(D.serie.salidas) > 0, {
+    legend: G.leyenda(), grid: G.rejilla(), tooltip: G.tip({ trigger: 'axis' }),
+    xAxis: G.eje({ type: 'category', data: D.serie.labels, axisLabel: { color: G.MUTED, fontWeight: 600, hideOverlap: true } }),
+    yAxis: G.valores(),
+    series: [G.barras('Entradas', C.entrada, D.serie.entradas), G.barras('Salidas', C.salida, D.serie.salidas)]
+  }, vacio);
+  G.pintar('g-cat', D.categorias.labels.length > 0, {
+    legend: G.leyenda(), grid: G.rejilla(), tooltip: G.tip({ trigger: 'axis' }),
+    xAxis: G.eje({ type: 'category', data: D.categorias.labels, axisLabel: { color: G.MUTED, interval: 0, width: 70, overflow: 'truncate' } }),
+    yAxis: G.valores(),
+    series: [G.barras('Entradas', C.entrada, D.categorias.entradas), G.barras('Salidas', C.salida, D.categorias.salidas)]
+  }, vacio);
+  G.pintar('g-top', D.top.labels.length > 0, {
+    grid: G.rejilla({ top: 8, right: 24 }), tooltip: G.tip({ trigger: 'axis', axisPointer: { type: 'none' } }),
+    xAxis: G.valores(),
+    // inverse: el mayor queda arriba
+    yAxis: G.eje({ type: 'category', inverse: true, data: D.top.labels, axisLabel: { color: C.ink, width: 110, overflow: 'truncate' } }),
+    series: [G.barras('Salidas', C.salida, D.top.valores, { barMaxWidth: 20 })]
+  }, vacio);
+  G.pintar('g-estado', D.estado.bajo + D.estado.ok > 0, {
+    legend: G.leyenda({ top: 'auto', bottom: 0, left: 'center' }),
+    tooltip: G.tip({ trigger: 'item', formatter: '{b}: {c} ({d}%)' }),
+    series: [{
+      type: 'pie', radius: ['48%', '72%'], center: ['50%', '45%'],
+      itemStyle: { borderColor: C.ink, borderWidth: 3 },
+      label: { color: C.ink, fontWeight: 700, fontSize: 15, formatter: '{c}' },
+      data: [{ name: 'Correctos', value: D.estado.ok, itemStyle: { color: C.hielo } },
+             { name: 'Bajo mínimo', value: D.estado.bajo, itemStyle: { color: C.salida } }]
+    }]
+  }, vacio);
+})();
+</script>
+{% endblock %}

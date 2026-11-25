@@ -1,0 +1,85 @@
+{% load static inventario_ui %}<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Sistema de Inventario{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800&family=Barlow:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{% static 'inventario/app.css' %}" rel="stylesheet">
+  <script src="{% static 'inventario/app.js' %}" defer></script>
+</head>
+<body>
+{% if user.is_authenticated %}
+<header class="sidebar">
+  <div class="sidebar-top">
+    <a class="sidebar-brand" href="{% url 'home' %}">Inventario</a>
+    <button class="sidebar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu" aria-expanded="false" aria-label="Menú">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true" focusable="false"><path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <div class="collapse sidebar-menu" id="menu">
+    <nav aria-label="Principal">
+      <ul class="sidebar-nav">
+        <li><a class="{% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}"{% if request.path == '/' %} aria-current="page"{% endif %}>Inicio</a></li>
+        <li><a class="{% if '/productos/' in request.path %}active{% endif %}" href="{% url 'product_list' %}"{% if '/productos/' in request.path %} aria-current="page"{% endif %}>Productos</a></li>
+        <li><a class="{% if '/movimientos/' in request.path %}active{% endif %}" href="{% url 'movement_list' %}"{% if '/movimientos/' in request.path %} aria-current="page"{% endif %}>Movimientos</a></li>
+        <li><a class="{% if '/almacen/' in request.path %}active{% endif %}" href="{% url 'warehouse' %}"{% if '/almacen/' in request.path %} aria-current="page"{% endif %}>Almacén</a></li>
+        <li><a class="{% if '/categorias/' in request.path %}active{% endif %}" href="{% url 'category_list' %}"{% if '/categorias/' in request.path %} aria-current="page"{% endif %}>Categorías</a></li>
+        <li><a class="{% if '/proveedores/' in request.path %}active{% endif %}" href="{% url 'supplier_list' %}"{% if '/proveedores/' in request.path %} aria-current="page"{% endif %}>Proveedores</a></li>
+      </ul>
+    </nav>
+    <div class="nav-usuario">
+      <div class="usuario">
+        <span class="avatar">{% icono 'usuario' 22 %}</span>
+        <span class="usuario-datos">
+          <span class="usuario-nombre">{{ user.username|capfirst }}</span>
+          {% if user.is_superuser %}<span class="usuario-rol">Administrador</span>{% endif %}
+        </span>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="btn-salir" type="submit">{% icono 'salir' 18 %}<span>Salir</span></button>
+      </form>
+    </div>
+  </div>
+</header>
+{% else %}
+<header class="topbar"><a class="sidebar-brand" href="{% url 'home' %}">Inventario</a></header>
+{% endif %}
+
+<div class="app-main">
+<main class="contenido">
+  {% if sin_stock_n %}
+  <div class="alert alert-stock alert-sin" role="status">
+    <strong class="d-block">Sin stock: {{ sin_stock_n }} producto{{ sin_stock_n|pluralize }}</strong>
+    {% for p in sin_stock_top %}<a href="{{ p.get_absolute_url }}" class="alert-link">{{ p.nombre }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}{% if sin_stock_n > 5 %}...{% endif %}
+  </div>
+  {% endif %}
+  {% if stock_bajo_n %}
+  <div class="alert alert-stock alert-bajo" role="status">
+    <strong class="d-block">Stock bajo: {{ stock_bajo_n }} producto{{ stock_bajo_n|pluralize }}</strong>
+    {% for p in stock_bajo_top %}<a href="{{ p.get_absolute_url }}" class="alert-link">{{ p.nombre }}</a> ({{ p.stock }}/{{ p.stock_minimo }}){% if not forloop.last %}, {% endif %}{% endfor %}{% if stock_bajo_n > 5 %}...{% endif %}
+  </div>
+  {% endif %}
+
+  {% for m in messages %}
+  <div class="alert alert-{% if m.tags == 'error' %}danger{% else %}{{ m.tags }}{% endif %}">{{ m }}</div>
+  {% endfor %}
+
+  {% block content %}{% endblock %}
+</main>
+</div>
+{% if user.is_authenticated %}
+<div class="modal fade" id="app-modal" tabindex="-1" aria-labelledby="app-modal-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content" id="app-modal-content"></div>
+  </div>
+</div>
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

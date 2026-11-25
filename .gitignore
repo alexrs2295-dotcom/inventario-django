@@ -1,0 +1,9 @@
+db.sqlite3
+__pycache__/
+*.pyc
+staticfiles/
+venv/
+.venv/
+.env
+credenciales-dev.txt
+temporary screenshots/

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static inventario_ui %}
+{% block content %}
+<div class="page-head">
+  <h1>Inicio</h1>
+  <a class="btn btn-primary" data-modal href="{% url 'movement_create' %}">Registrar movimiento</a>
+</div>
+
+<ul class="kpis" aria-label="Indicadores del inventario">
+  <li><a class="kpi" href="{% url 'product_list' %}"><dl class="m-0"><dt>Productos</dt><dd>{{ kpi.n }}</dd></dl></a></li>
+  <li class="kpi-valor-li"><a class="kpi" href="{% url 'product_list' %}"><dl class="m-0"><dt>Valor del inventario</dt><dd>{{ kpi.valor|floatformat:"2g" }} €</dd></dl></a></li>
+  <li><a class="kpi kpi-sin" href="{% url 'product_list' %}?estado=sin"><dl class="m-0"><dt>Sin stock</dt><dd>{{ kpi.sin }}</dd></dl></a></li>
+  <li><a class="kpi kpi-bajo" href="{% url 'product_list' %}?estado=bajo"><dl class="m-0"><dt>Stock bajo</dt><dd>{{ kpi.bajo }}</dd></dl></a></li>
+  <li><a class="kpi" href="{% url 'movement_list' %}"><dl class="m-0"><dt>Movimientos (30 días)</dt><dd>{{ kpi.movs30 }}</dd></dl></a></li>
+</ul>
+
+<div class="dash-grid">
+  <section class="card" aria-labelledby="t-serie"><div class="card-body">
+    <h2 id="t-serie">Entradas y salidas · 14 días</h2>
+    <div id="g-serie" class="grafico" role="img" aria-label="Gráfico de barras de entradas y salidas de unidades por día en los últimos 14 días. Datos en la tabla siguiente."></div>
+    <table class="visually-hidden"><caption>Entradas y salidas por día, últimos 14 días</caption>
+      <thead><tr><th>Día</th><th>Entradas</th><th>Salidas</th></tr></thead>
+      <tbody>{% for dia, e, s in tablas.serie %}<tr><td>{{ dia }}</td><td>{{ e }}</td><td>{{ s }}</td></tr>{% endfor %}</tbody></table>
+  </div></section>
+  <section class="card" aria-labelledby="t-top"><div class="card-body">
+    <h2 id="t-top">Top 5 salidas · 30 días</h2>
+    <div id="g-top" class="grafico" role="img" aria-label="Gráfico de barras horizontales de los 5 productos con más unidades salidas en 30 días. Datos en la tabla siguiente."></div>
+    <table class="visually-hidden"><caption>Productos con más salidas, últimos 30 días</caption>
+      <thead><tr><th>Producto</th><th>Unidades</th></tr></thead>
+      <tbody>{% for nombre, n in tablas.top %}<tr><td>{{ nombre }}</td><td>{{ n }}</td></tr>{% endfor %}</tbody></table>
+  </div></section>
+  <section class="card" aria-labelledby="t-estado"><div class="card-body">
+    <h2 id="t-estado">Estado del stock</h2>
+    <div id="g-estado" class="grafico" role="img" aria-label="Gráfico de anillo del estado del stock: {{ datos.estado.ok }} correcto{{ datos.estado.ok|pluralize }}, {{ datos.estado.bajo }} con stock bajo y {{ datos.estado.sin }} sin stock."></div>
+  </div></section>
+  <section class="card" aria-labelledby="t-cat"><div class="card-body">
+    <h2 id="t-cat">Unidades por categoría</h2>
+    <div id="g-cat" class="grafico" role="img" aria-label="Gráfico de barras de unidades en stock por categoría. Datos en la tabla siguiente."></div>
+    <table class="visually-hidden"><caption>Unidades en stock por categoría</caption>
+      <thead><tr><th>Categoría</th><th>Unidades</th></tr></thead>
+      <tbody>{% for nombre, n in tablas.categorias %}<tr><td>{{ nombre }}</td><td>{{ n }}</td></tr>{% endfor %}</tbody></table>
+  </div></section>
+  <section class="card dash-ancho" aria-labelledby="t-ult"><div class="card-body">
+    <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-2">
+      <h2 id="t-ult" class="m-0">Últimos movimientos</h2>
+      <a href="{% url 'movement_list' %}" class="fw-bold">Ver todos</a>
+    </div>
+    <ul class="mov-lista">
+      {% for m in ultimos %}
+      <li>
+        {% tipo_badge m.tipo %}
+        <a class="mov-prod link-dark" href="{{ m.product.get_absolute_url }}">{{ m.product.nombre }}</a>
+        <span class="mov-cant"><span class="visually-hidden">Cantidad </span>{{ m.cantidad }} uds.</span>
+        <span class="mov-fecha">{{ m.fecha|date:"d/m/Y H:i" }}</span>
+      </li>
+      {% empty %}<li class="text-secondary fw-semibold">Sin movimientos.</li>
+      {% endfor %}
+    </ul>
+  </div></section>
+</div>
+
+{{ datos|json_script:"datos-dashboard" }}
+<script src="{% static 'inventario/vendor/echarts.min.js' %}"></script>
+<script src="{% static 'inventario/charts.js' %}"></script>
+<script>
+(function () {
+  const D = JSON.parse(document.getElementById('datos-dashboard').textContent);
+  const G = InvCharts, C = G.C, E = D.estado;
+
+  G.pintar('g-serie', G.suma(D.serie.entradas) + G.suma(D.serie.salidas) > 0, {
+    legend: G.leyenda(), grid: G.rejilla(), tooltip: G.tip({ trigger: 'axis' }),
+    xAxis: G.eje({ type: 'category', data: D.serie.labels, axisLabel: { color: G.MUTED, fontWeight: 600, hideOverlap: true } }),
+    yAxis: G.valores(),
+    series: [G.barras('Entradas', C.entrada, D.serie.entradas), G.barras('Salidas', C.salida, D.serie.salidas)]
+  });
+  G.pintar('g-top', D.top.labels.length > 0, {
+    grid: G.rejilla({ top: 8, right: 24 }), tooltip: G.tip({ trigger: 'axis', axisPointer: { type: 'none' } }),
+    xAxis: G.valores(),
+    yAxis: G.eje({ type: 'category', inverse: true, data: D.top.labels, axisLabel: { color: C.ink, width: 110, overflow: 'truncate' } }),
+    series: [G.barras('Salidas', C.salida, D.top.valores, { barMaxWidth: 20 })]
+  });
+  G.pintar('g-estado', E.ok + E.bajo + E.sin > 0, {
+    legend: G.leyenda({ top: 'auto', bottom: 0, left: 'center' }),
+    tooltip: G.tip({ trigger: 'item', formatter: '{b}: {c} ({d}%)' }),
+    series: [{
+      type: 'pie', radius: ['48%', '72%'], center: ['50%', '45%'],
+      itemStyle: { borderColor: C.ink, borderWidth: 3 },
+      label: { color: C.ink, fontWeight: 700, fontSize: 15, formatter: function (p) { return p.value || ''; } },
+      labelLine: { lineStyle: { color: C.ink, width: 2 } },
+      data: [{ name: 'Correcto', value: E.ok, itemStyle: { color: C.verde } },
+             { name: 'Stock bajo', value: E.bajo, itemStyle: { color: C.ambar } },
+             { name: 'Sin stock', value: E.sin, itemStyle: { color: C.salida } }]
+    }]
+  });
+  G.pintar('g-cat', G.suma(D.categorias.valores) > 0, {
+    grid: G.rejilla({ top: 12 }), tooltip: G.tip({ trigger: 'axis' }),
+    xAxis: G.eje({ type: 'category', data: D.categorias.labels, axisLabel: { color: G.MUTED, interval: 0, rotate: 30, width: 90, overflow: 'truncate' } }),
+    yAxis: G.valores(),
+    series: [G.barras('Unidades', C.entrada, D.categorias.valores)]
+  });
+})();
+</script>
+{% endblock %}

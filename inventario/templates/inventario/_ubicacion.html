@@ -1,0 +1,2 @@
+{# Chip de ubicación del producto p: Zona · Estantería (enlaza al plano) o "Sin ubicar". #}
+{% if p.ubicacion %}<a class="chip chip-ubic" href="{% url 'warehouse' %}#est-{{ p.ubicacion_id }}">{{ p.ubicacion }}</a>{% else %}<span class="chip chip-sinubic">Sin ubicar</span>{% endif %}

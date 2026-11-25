@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load inventario_ui %}
+{% block content %}
+<div class="page-head">
+  <h1>Productos</h1>
+  <div class="acciones">
+    <a class="btn btn-outline-secondary" data-modal href="{% url 'product_import' %}">Importar CSV</a>
+    <a class="btn btn-primary" data-modal href="{% url 'product_create' %}">Nuevo producto</a>
+  </div>
+</div>
+<div class="card mb-3"><div class="card-body p-3">
+<form method="get" class="row g-2">
+  <div class="col-12 col-md-6 col-xl-12 col-xxl-2"><input class="form-control" type="search" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nombre o SKU" aria-label="Buscar"></div>
+  <div class="col-12 col-md-6 col-xl-3 col-xxl-2"><select class="form-select" name="categoria" aria-label="Categoría">
+    <option value="">Todas las categorías</option>
+    {% for c in categorias %}<option value="{{ c.pk }}" {% if request.GET.categoria == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>{% endfor %}
+  </select></div>
+  <div class="col-12 col-md-6 col-xl-3 col-xxl-2"><select class="form-select" name="proveedor" aria-label="Proveedor">
+    <option value="">Todos los proveedores</option>
+    {% for s in proveedores %}<option value="{{ s.pk }}" {% if request.GET.proveedor == s.pk|stringformat:"s" %}selected{% endif %}>{{ s.nombre }}</option>{% endfor %}
+  </select></div>
+  <div class="col-12 col-md-6 col-xl-3 col-xxl-2"><select class="form-select" name="ubicacion" aria-label="Ubicación">
+    <option value="">Todas las ubicaciones</option>
+    <option value="sin" {% if request.GET.ubicacion == 'sin' %}selected{% endif %}>Sin ubicar</option>
+    {% for z in zonas %}{% if z.estanterias.all %}<optgroup label="{{ z.nombre }}">{% for e in z.estanterias.all %}<option value="{{ e.pk }}" {% if request.GET.ubicacion == e.pk|stringformat:"s" %}selected{% endif %}>{{ e.nombre }}</option>{% endfor %}</optgroup>{% endif %}{% endfor %}
+  </select></div>
+  <div class="col-12 col-md-6 col-xl-3 col-xxl-2"><select class="form-select" name="estado" aria-label="Estado de stock">
+    <option value="">Todos los estados</option>
+    {% for valor, nombre in estados %}<option value="{{ valor }}" {% if request.GET.estado == valor %}selected{% endif %}>{{ nombre }}</option>{% endfor %}
+  </select></div>
+  <div class="col-12 col-xxl-2 d-flex gap-3 justify-content-xl-end"><button class="btn btn-primary flex-fill flex-xl-grow-0" type="submit">Filtrar</button>
+    <a class="btn btn-outline-secondary flex-fill flex-xl-grow-0" href="{% url 'product_list' %}">Limpiar</a></div>
+</form>
+</div></div>
+<div class="card tabla-wrap"><div class="table-responsive">
+<table class="table align-middle tabla-cards">
+  <thead><tr><th>Nombre</th><th>SKU</th><th>Categoría</th><th>Proveedor</th><th class="num">Precio</th><th>Stock</th><th><span class="visually-hidden">Acciones</span></th></tr></thead>
+  <tbody>
+  {% for p in object_list %}
+  <tr class="fila-click stock-{{ p.estado_stock }}">
+    <td data-label="Nombre"><a class="enlace-fila fw-semibold" href="{{ p.get_absolute_url }}">{{ p.nombre }}</a>
+      <div class="ubic-xl">{% include 'inventario/_ubicacion.html' with p=p %}</div></td>
+    <td data-label="SKU"><span class="chip chip-sku">{{ p.sku }}</span></td>
+    <td data-label="Categoría"><span class="chip chip-cat">{{ p.category }}</span></td>
+    <td data-label="Proveedor"><span class="chip chip-cat">{{ p.supplier }}</span></td>
+    <td data-label="Ubicación" class="solo-movil">{% include 'inventario/_ubicacion.html' with p=p %}</td>
+    <td data-label="Precio" class="num">{{ p.precio }} €</td>
+    <td data-label="Stock"><div class="celda-stock">{% include 'inventario/_gauge.html' with p=p size='sm' %}{% estado_badge p %}</div></td>
+    <td class="actions">
+      <a class="btn btn-sm btn-outline-primary" data-modal href="{% url 'movement_create' %}?product={{ p.pk }}">Movimiento</a>
+      <a class="btn btn-sm btn-outline-secondary" data-modal href="{% url 'product_update' p.pk %}">Editar</a>
+      <a class="btn btn-sm btn-outline-danger" data-modal href="{% url 'product_delete' p.pk %}">Eliminar</a>
+    </td>
+  </tr>
+  {% empty %}<tr><td colspan="7" class="vacio">Sin productos.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% include 'inventario/_paginacion.html' %}
+{% endblock %}

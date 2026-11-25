@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% load inventario_ui %}
+{% block content %}
+<div class="page-head">
+  <h1>{{ object.nombre }} <span class="align-middle ms-1">{% estado_badge object %}</span></h1>
+  <div class="acciones">
+    <a class="btn btn-primary" data-modal href="{% url 'movement_create' %}?product={{ object.pk }}">Registrar movimiento</a>
+    <a class="btn btn-outline-secondary" data-modal href="{% url 'product_move' object.pk %}">Mover</a>
+    <a class="btn btn-outline-secondary" data-modal href="{% url 'product_update' object.pk %}">Editar</a>
+  </div>
+</div>
+<div class="card mb-4"><div class="card-body detalle-grid">
+  <div class="detalle-gauge">
+    {% include 'inventario/_gauge.html' with p=object size='lg' %}
+    <p class="detalle-gauge-pie mb-0">Mínimo: <span class="cifra">{{ object.stock_minimo }}</span> uds</p>
+  </div>
+  <dl class="datos">
+    <dt>SKU</dt><dd><span class="chip chip-sku">{{ object.sku }}</span></dd>
+    <dt>Categoría</dt><dd><span class="chip chip-cat">{{ object.category }}</span></dd>
+    <dt>Proveedor</dt><dd><span class="chip chip-cat">{{ object.supplier }}</span></dd>
+    <dt>Ubicación</dt><dd>{% include 'inventario/_ubicacion.html' with p=object %}</dd>
+    <dt>Precio</dt><dd class="cifra">{{ object.precio }} €</dd>
+    <dt>Stock</dt><dd><span class="cifra">{{ object.stock }}</span> (mínimo <span class="cifra">{{ object.stock_minimo }}</span>)</dd>
+  </dl>
+</div></div>
+<h2 class="mb-2">Últimos movimientos</h2>
+<div class="card tabla-wrap"><div class="table-responsive">
+<table class="table align-middle tabla-cards">
+  <thead><tr><th>Fecha</th><th>Tipo</th><th class="num">Cantidad</th><th>Usuario</th><th>Nota</th></tr></thead>
+  <tbody>
+  {% for m in movimientos %}
+  <tr>
+    <td data-label="Fecha"><span class="chip chip-fecha">{% icono 'calendario' 14 %}{{ m.fecha|date:"d/m/Y H:i" }}</span></td>
+    <td data-label="Tipo">{% tipo_badge m.tipo %}</td>
+    <td data-label="Cantidad" class="num">{{ m.cantidad }}</td>
+    <td data-label="Usuario">{{ m.usuario }}</td>
+    <td data-label="Nota">{{ m.nota }}</td>
+  </tr>
+  {% empty %}<tr><td colspan="5" class="vacio">Sin movimientos.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div></div>
+{% endblock %}

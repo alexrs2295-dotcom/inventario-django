@@ -1,0 +1,13 @@
+{# Ficha arrastrable de producto p (plano del almacén). #}
+{% load inventario_ui %}
+<div class="ficha stock-{{ p.estado_stock }}" data-id="{{ p.pk }}" data-nombre="{{ p.nombre }}" data-q="{{ p.nombre|lower }} {{ p.sku|lower }}" tabindex="0" role="group" aria-label="{{ p.nombre }}, SKU {{ p.sku }}. Intro para mover.">
+  <span class="ficha-asa" aria-hidden="true"><svg width="14" height="22" viewBox="0 0 14 22" fill="currentColor" focusable="false"><circle cx="4" cy="5" r="1.6"/><circle cx="10" cy="5" r="1.6"/><circle cx="4" cy="11" r="1.6"/><circle cx="10" cy="11" r="1.6"/><circle cx="4" cy="17" r="1.6"/><circle cx="10" cy="17" r="1.6"/></svg></span>
+  <div class="ficha-cuerpo">
+    <span class="ficha-nombre">{{ p.nombre }}</span>
+    <span class="ficha-meta"><span class="chip chip-sku">{{ p.sku }}</span>{% estado_badge p %}</span>
+  </div>
+  <div class="ficha-lado">
+    {% include 'inventario/_gauge.html' with p=p size='sm' %}
+    <a class="ficha-mover" data-modal href="{% url 'product_move' p.pk %}" aria-label="Mover «{{ p.nombre }}»…" title="Mover…">{% icono 'mover' 18 %}</a>
+  </div>
+</div>
