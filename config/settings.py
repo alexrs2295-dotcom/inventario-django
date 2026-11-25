@@ -34,7 +34,11 @@ else:
         raise RuntimeError('Con DJANGO_DEBUG=0 hay que definir la variable de entorno DJANGO_SECRET_KEY.')
     _hosts_por_defecto = ''
     # Cookies Secure solo con HTTPS real; con DJANGO_HTTPS=1 (por defecto 0) para poder entrar por http://IP
-    SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = os.environ.get('DJANGO_HTTPS', '0').lower() in ('1', 'true', 'yes')
+    _https = os.environ.get('DJANGO_HTTPS', '0').lower() in ('1', 'true', 'yes')
+    SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = _https
+    if _https:
+        # Render termina TLS en un proxy: sin esto Django ve http y el CSRF por origen (Origin https) falla
+        SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     STATIC_ROOT = BASE_DIR / 'staticfiles'
     STORAGES = {
         'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},

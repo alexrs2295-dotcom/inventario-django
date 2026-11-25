@@ -39,7 +39,7 @@ Después carga datos de ejemplo (idempotente; `--reset` borra antes el inventari
 | `DJANGO_SECRET_KEY` | clave de desarrollo | Obligatoria si `DJANGO_DEBUG=0`. |
 | `DJANGO_ALLOWED_HOSTS` | `localhost,127.0.0.1` (solo en debug) | Hosts/IP separados por comas. |
 | `DJANGO_CSRF_TRUSTED_ORIGINS` | vacío | Orígenes separados por comas, p. ej. `http://1.2.3.4:8080`. |
-| `DJANGO_HTTPS` | `0` | Con `DJANGO_DEBUG=0`, `1` marca las cookies de sesión/CSRF como Secure. Ponlo a `1` solo si se sirve por HTTPS; con HTTP el login no funcionaría. |
+| `DJANGO_HTTPS` | `0` | Con `DJANGO_DEBUG=0`, `1` marca las cookies de sesión/CSRF como Secure. Ponlo a `1` solo si se sirve por HTTPS (también activa `SECURE_PROXY_SSL_HEADER` para proxys como el de Render); con HTTP el login no funcionaría. |
 
 ## Formato del CSV de importación
 
@@ -52,7 +52,16 @@ Cable HDMI 2 m;ELE-100;Electrónica;TecnoMarket España;8.95;20;5
 
 Todos los campos son obligatorios; `precio` ≥ 0 con decimales, `stock` y `stock_minimo` enteros ≥ 0; el `sku` no puede repetirse en el archivo. Un `sku` existente se actualiza (conservando su stock actual); categorías y proveedores inexistentes se crean. Si hay errores no se importa nada y se indican por fila.
 
-## Despliegue en un droplet Ubuntu (nginx + gunicorn, sin dominio ni HTTPS)
+## Despliegue en Render (plan gratuito, HTTPS automático)
+
+1. Crea una cuenta en [render.com](https://render.com) y conecta tu cuenta de GitHub.
+2. **New → Blueprint**, elige este repositorio (lee `render.yaml`).
+3. Escribe el valor de `DEMO_PASSWORD` (la contraseña que tendrá el usuario `admin`) y pulsa **Apply**.
+4. Al terminar el build, la app queda en una URL tipo `https://inventario-django.onrender.com`. Entra con el usuario `admin` y la contraseña que pusiste en `DEMO_PASSWORD`.
+
+Avisos del plan gratuito: el servicio se duerme tras 15 min sin tráfico y tarda ~1 min en despertar; el disco es efímero, así que la base SQLite se recrea en cada arranque (migraciones, usuario `admin` vía `crear_admin_demo` y datos demo con `seed_demo`) y **los datos se reinician** cada vez. La contraseña nunca se guarda en el repositorio.
+
+## Alternativa: despliegue en un droplet Ubuntu (nginx + gunicorn, sin dominio ni HTTPS)
 
 Acceso por `http://IP:8080` (el puerto 80 queda libre para otra aplicación).
 

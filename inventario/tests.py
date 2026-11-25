@@ -1,6 +1,8 @@
 import json
+import os
 from decimal import Decimal
 from io import StringIO
+from unittest.mock import patch
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.contrib.auth.models import User
@@ -510,3 +512,22 @@ class AuditoriaTests(TestCase):
         StockMovement.objects.create(product=otro, tipo='SALIDA', cantidad=2, usuario=self.user)
         self.assertEqual(self.client.get(reverse('home')).context['datos']['top']['valores'], [3, 2])
 
+
+
+
+class CrearAdminDemoTests(TestCase):
+    def test_sin_variable_no_crea(self):
+        with patch.dict(os.environ):
+            os.environ.pop('DEMO_PASSWORD', None)
+            call_command('crear_admin_demo', stdout=StringIO())
+        self.assertFalse(User.objects.filter(username='admin').exists())
+
+    def test_crea_admin_e_idempotente(self):
+        with patch.dict(os.environ, {'DEMO_PASSWORD': 'demo-test-123'}):
+            call_command('crear_admin_demo', stdout=StringIO())
+            User.objects.filter(username='admin').update(is_staff=False)
+            with patch.dict(os.environ, {'DEMO_PASSWORD': 'otra-clave-456'}):
+                call_command('crear_admin_demo', stdout=StringIO())
+        u = User.objects.get(username='admin')
+        self.assertTrue(u.is_superuser and u.check_password('demo-test-123'))
+        self.assertFalse(u.is_staff)  # el segundo run no tocó el usuario existente

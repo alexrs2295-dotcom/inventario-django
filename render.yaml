@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: inventario-django
+    runtime: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: python manage.py migrate --noinput && python manage.py crear_admin_demo && python manage.py seed_demo && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT
+    healthCheckPath: /login/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: DJANGO_DEBUG
+        value: "0"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_ALLOWED_HOSTS
+        value: .onrender.com
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: https://*.onrender.com
+      - key: DJANGO_HTTPS
+        value: "1"
+      - key: DEMO_PASSWORD
+        sync: false
