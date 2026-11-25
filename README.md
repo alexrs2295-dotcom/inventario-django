@@ -2,6 +2,15 @@
 
 Aplicación web en Django (5.2, SQLite) para controlar el stock de productos y sus movimientos. Interfaz en español, con login obligatorio.
 
+## Acceso a la demo
+
+Servicio desplegado en Render: `https://inventario-django.onrender.com` (sustituir por la URL pública real).
+
+- Usuario: `admin`
+- Contraseña: `demo-inventario-django`
+
+Son credenciales de demostración y los datos son ficticios: se reinician cada vez que el servicio se reinicia. El plan gratuito de Render duerme el servicio tras 15 minutos sin visitas, así que la primera carga puede tardar ~1 minuto.
+
 ## Funcionalidades
 
 - **Productos** con estado de stock (normal / stock bajo respecto al mínimo) y medidor visual; búsqueda, filtros por categoría y proveedor, y paginación.
